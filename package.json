@@ -2,19 +2,16 @@
   "name": "binom_daemon",
   "version": "1.0.0",
   "description": "",
-  "start": "babel-node server.js",
   "scripts": {
+    "start": "babel-node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "dependencies": {
     "axios": "0.16.2",
-    "cli": "1.0.1",
-    "express": "4.15.3",
-    "schedule": "0.1.0",
+    "babel-cli": "6.24.1",
     "babel-plugin-resolver": "1.1.0",
     "babel-plugin-transform-async-to-generator": "6.24.1",
     "babel-plugin-transform-function-bind": "6.22.0",
@@ -22,6 +19,9 @@
     "babel-preset-es2015": "6.24.1",
     "babel-preset-es2016": "6.24.1",
     "babel-preset-es2017-node7": "0.5.2",
-    "babel-preset-stage-0": "6.24.1"
+    "babel-preset-stage-0": "6.24.1",
+    "cli": "1.0.1",
+    "express": "4.15.3",
+    "schedule": "0.1.0"
   }
 }
