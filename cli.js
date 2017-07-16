@@ -2,22 +2,34 @@ import fs from 'fs';
 import cli from 'cli';
 import ListBuilder from 'list-builder';
 import dotenv from 'dotenv';
+import fetch from 'node-fetch';
 
 dotenv.config();
 
 cli.enable('status');
 
+let config;
+let listBuilder;
+
 const options = cli.parse({
     cmd: ['c', '{update_lists|print_lists}', 'string']
 });
 
-const configFileName = '.smrtmnk.com.json';
+console.log(`loading config from ${process.env.CONFIG_FILE_URL}`);
 
-console.log(`loading config from ${configFileName}`);
-const stringConfig = fs.readFileSync(configFileName, 'utf-8');
-const config = JSON.parse(stringConfig);
-
-const listBuilder = new ListBuilder(process.env.MONGODB_URI, config.API);
+fetch(process.env.CONFIG_FILE_URL, 'utf-8')
+.then(res => res.text())
+.then(content => {
+    console.log(content);
+    console.log('done fetching config');
+    config = JSON.parse(content);
+    listBuilder = new ListBuilder(process.env.MONGODB_URI, config.API);
+    return listBuilder.init();
+})
+.then(() => {
+    console.log('list builder inited');
+    parseOptions();
+});
 
 const parseOptions = () => {
     if(options.cmd === 'update_lists') {
@@ -44,9 +56,3 @@ const parseOptions = () => {
         cli.fatal(`unknown cmd: ${options.cmd}`)
     }
 }
-
-listBuilder.init()
-.then(() => {
-    console.log('list builder inited');
-    parseOptions();
-});

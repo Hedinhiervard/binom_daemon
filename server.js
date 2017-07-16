@@ -3,6 +3,7 @@ import ListBuilder from 'list-builder';
 import fs from 'fs';
 import schedule from 'schedule';
 import dotenv from 'dotenv';
+import fetch from 'node-fetch';
 
 dotenv.config();
 
@@ -10,12 +11,12 @@ let expressApp = express();
 
 const configFileName = '.smrtmnk.com.json';
 
-console.log(`loading config from ${configFileName}`);
-const stringConfig = fs.readFileSync(configFileName, 'utf-8');
-const config = JSON.parse(stringConfig);
+console.log(`loading config from ${process.env.CONFIG_FILE_URL}`);
 
-const listBuilder = new ListBuilder(process.env.MONGODB_URI, config.API);
+let listBuilder;
+
 const port = process.env.PORT || 8080;
+let config;
 
 const promisifySingle = (f, param) => {
     return new Promise((resolve, reject) => {
@@ -29,7 +30,13 @@ const promisifySingle = (f, param) => {
     });
 }
 
-listBuilder.init()
+fetch(process.env.CONFIG_FILE_URL, 'utf-8')
+.then(res => res.text())
+.then(content => {
+    config = JSON.parse(content);
+    listBuilder = new ListBuilder(process.env.MONGODB_URI, config.API);
+    return listBuilder.init()
+})
 .then(() => {
     expressApp.get('/report', (req, res, next) => {
         listBuilder.getLatest()
