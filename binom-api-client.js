@@ -45,6 +45,6 @@ export default class BinomAPIClient {
      */
     getCampaignList() {
         console.log('getting campaigns');
-        return this.makeAPIRequest({ page: 'Campaigns' })
+        return this.makeAPIRequest({ page: 'Campaigns' });
     }
 }

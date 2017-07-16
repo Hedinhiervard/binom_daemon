@@ -22,6 +22,7 @@ export default class TimedStore {
     constructor(filename) {
         this.filename = filename;
         try {
+            console.log(`reading ${this.filename}`);
             this.data = JSON.parse(fs.readFileSync(this.filename, 'utf-8'));
         } catch(err) {
             console.error(err.toString());
@@ -35,7 +36,7 @@ export default class TimedStore {
      */
     addDataPoint(setID, data) {
         const timestamp = Date.now();
-        console.log(`adding ${setID} data set with timestamp ${timestamp}`);
+        console.log(`adding "${setID}" data set with timestamp "${timestamp}"`);
         this.data[setID] = this.data[setID] || {};
         this.data[setID][timestamp] = data;
         this.save();
@@ -46,5 +47,17 @@ export default class TimedStore {
      */
     save() {
         fs.writeFileSync(this.filename, JSON.stringify(this.data, null, 4), 'utf-8');
+    }
+
+    /**
+     * Returns the latest data set added
+     * @param {string} setID - the set ID to get
+     *
+     */
+    getLatest(setID) {
+        const keys = Object.keys(this.data[setID]).sort();
+        if(keys.length <= 0) return undefined;
+        const key = keys[keys.length - 1];
+        return { timestamp: key, set: this.data[setID][key] };
     }
 }
