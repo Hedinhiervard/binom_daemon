@@ -28,12 +28,21 @@ export default class ListBuilder {
 
     /**
      * Creates a ListBuilder instance
+     * @param {string} mongodbURL URL to connect to mongodb instance
      * @param  {[type]} apiConfig config to pass to BinomAPIClient
      */
-    constructor(apiConfig) {
+    constructor(mongodbURL, apiConfig) {
         this.binom = new BinomAPIClient(apiConfig);
-        this.store = new TimedStore('store.json');
+        this.store = new TimedStore(mongodbURL);
         this.evaluator = new Evaluator();
+    }
+
+    /**
+     * Initialized the list builder
+     * @return {Promise} pending operation
+     */
+    init() {
+        return this.store.init();
     }
 
     /**
@@ -82,8 +91,10 @@ export default class ListBuilder {
 
         return Promise.all(promises)
         .then(() => {
-            this.store.addDataPoint(LIST_DATA, listData);
-            return listData;
+            return this.store.addDataPoint(LIST_DATA, listData);
         })
+        .then(() => {
+            return listData
+        });
     }
 }

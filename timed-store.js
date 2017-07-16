@@ -1,33 +1,32 @@
 import fs from 'fs';
+import mongodb from 'mongodb'
 
 /**
  * This class stores data points with their timestamps and performs various analytics
  */
 export default class TimedStore {
     /**
-     * Database
-     * @type {Object}
+     * MongoClient instance
      */
-    data = {};
-
-    /**
-     * Filename to store data in
-     * @type {string}
-     */
-    filename = null;
+    db = null;
 
     /**
      * Create a new instance and load data
      * @param  {string} filename - a filename to store data in
      */
-    constructor(filename) {
-        this.filename = filename;
-        try {
-            console.log(`reading ${this.filename}`);
-            this.data = JSON.parse(fs.readFileSync(this.filename, 'utf-8'));
-        } catch(err) {
-            console.error(err.toString());
-        }
+    constructor(mongodbURL) {
+        this.mongodbURL = mongodbURL;
+    }
+
+    /**
+     * Initialized the store
+     * @return {Promise} pending operation
+     */
+    init() {
+        return mongodb.MongoClient.connect(this.mongodbURL)
+        .then(db => {
+            this.db = db;
+        })
     }
 
     /**
@@ -38,16 +37,8 @@ export default class TimedStore {
     addDataPoint(setID, data) {
         const timestamp = Date.now();
         console.log(`adding ${setID} data set with at ${new Date(+timestamp).toString()}`);
-        this.data[setID] = this.data[setID] || {};
-        this.data[setID][timestamp] = data;
-        this.save();
-    }
-
-    /**
-     * Saves the data to the storage
-     */
-    save() {
-        fs.writeFileSync(this.filename, JSON.stringify(this.data, null, 4), 'utf-8');
+        data.timestamp = timestamp;
+        return this.db.collection(setID).insert(data);
     }
 
     /**
@@ -56,14 +47,9 @@ export default class TimedStore {
      *
      */
     getLatest(setID) {
-        if(!this.data[setID]) {
-            return Promise.resolve({ timestamp: null, set: null });
-        }
-        const keys = Object.keys(this.data[setID]).sort();
-        if(keys.length <= 0) {
-            return Promise.resolve({ timestamp: null, set: null });
-        }
-        const key = keys[keys.length - 1];
-        return Promise.resolve({ timestamp: key, set: this.data[setID][key] });
+        return this.db.collection(setID).find({}).sort({'timestamp': -1}).limit(1).next()
+        .then(result => {
+            return { timestamp: result.timestamp, set: result };
+        });
     }
 }

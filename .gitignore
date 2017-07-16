@@ -12,3 +12,5 @@ package-lock.json
 # storage file
 store.json
 
+# local env vars
+.env
