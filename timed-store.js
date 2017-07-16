@@ -36,7 +36,7 @@ export default class TimedStore {
      */
     addDataPoint(setID, data) {
         const timestamp = Date.now();
-        console.log(`adding "${setID}" data set with timestamp "${timestamp}" (${data.length} records)`);
+        console.log(`adding ${setID} data set with at ${new Date(+timestamp).toString()}`);
         this.data[setID] = this.data[setID] || {};
         this.data[setID][timestamp] = data;
         this.save();

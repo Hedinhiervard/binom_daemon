@@ -20,10 +20,18 @@ export default class BinomAPIClient {
      * Create new Binom API client
      * @param  {Object} config - default config
      */
+
     constructor(config) {
         this.config = config;
+        let cookieString = '';
+        for(const cookieName in config.cookies) {
+            cookieString += `${cookieName}=${config.cookies[cookieName]}; `;
+        }
         this.api = axios.create({
-            baseURL: this.config.baseURL
+            baseURL: this.config.baseURL,
+            headers: {
+                'cookie': cookieString
+            }
         });
     }
 
@@ -46,5 +54,15 @@ export default class BinomAPIClient {
     getCampaignList() {
         console.log('getting campaigns');
         return this.makeAPIRequest({ page: 'Campaigns' });
+    }
+
+    /**
+     * Returns detailed publishers list for the given campaign id
+     * @param  {number} campaignID - campaign to request publishers for
+     * @return {Array} - detailed list of publishers
+     */
+    getPublishersForCampaign(campaignID) {
+        console.log(`getting publishers info for campaign ${campaignID}`);
+        return this.makeAPIRequest({ page: 'Stats', camp_id: campaignID });
     }
 }
