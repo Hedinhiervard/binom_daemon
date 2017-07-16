@@ -1,0 +1,12 @@
+# config file
+.smrtmnk.com.json
+
+# temp files
+package-lock.json
+
+# Node build artifacts
+node_modules
+npm-debug.log
+
+# storage file
+store.json
