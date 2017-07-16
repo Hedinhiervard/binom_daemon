@@ -1,0 +1,35 @@
+{
+  "baseURL": "http://smrtmnk.com/",
+  "api_key": "100000158b6ec2a0271b8ff98d8a357747ca2a9",
+  "timezone": "+2",
+  "cookies": {
+    "group1": "27",
+    "group2": "1",
+    "group3": "1",
+    "date": "1",
+    "password": "244cf2b09b0e9d494e8ce0309752c677",
+    "login": "Andrei"
+  },
+  "rules": {
+    "473": {
+      "publisherWhitelistConditions":
+      [
+        [
+          ["leads", ">", "3"],
+          ["roi", ">", 200]
+        ],
+        [
+          ["leads", ">=", "100"],
+          ["roi", ">", 10]
+        ]
+      ],
+      "publisherBlacklistConditions":
+      [
+        [
+          ["clicks", ">", "100"],
+          ["lpctr", "<", 50]
+        ]
+      ]
+    }
+  }
+}
