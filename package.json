@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "axios": "0.16.2",
-    "cli": "1.0.1"
+    "cli": "1.0.1",
+    "express": "4.15.3",
+    "schedule": "0.1.0"
   }
 }

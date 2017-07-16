@@ -1,4 +1,5 @@
 import fs from 'fs';
+
 /**
  * This class stores data points with their timestamps and performs various analytics
  */
@@ -56,13 +57,13 @@ export default class TimedStore {
      */
     getLatest(setID) {
         if(!this.data[setID]) {
-            return { timestamp: null, set: null }
+            return Promise.resolve({ timestamp: null, set: null });
         }
         const keys = Object.keys(this.data[setID]).sort();
         if(keys.length <= 0) {
-            return { timestamp: null, set: null }
+            return Promise.resolve({ timestamp: null, set: null });
         }
         const key = keys[keys.length - 1];
-        return { timestamp: key, set: this.data[setID][key] };
+        return Promise.resolve({ timestamp: key, set: this.data[setID][key] });
     }
 }
