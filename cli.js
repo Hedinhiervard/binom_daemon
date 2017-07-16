@@ -73,7 +73,7 @@ if(options.cmd === 'update_lists') {
             }
         })
         .catch(err => {
-            console.log(err.toString())
+            console.log(err.toString(), err.stack)
         });
         promises.push(promise);
     }
