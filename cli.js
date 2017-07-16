@@ -3,10 +3,14 @@ import fs from 'fs';
 import TimedStore from 'timed-store';
 import cli from 'cli';
 
+const WHITELIST = 'whitelist';
+const BLACKLIST = 'blacklist';
+const CAMPAIGNS = CAMPAIGNS;
+
 cli.enable('status');
 
 const options = cli.parse({
-    cmd: ['c', '{fetch|analyze}', 'string']
+    cmd: ['c', '{fetch|build_lists|stat}', 'string']
 });
 
 const configFileName = '.smrtmnk.com.json';
@@ -49,12 +53,16 @@ const needsBlacklisting = (campaign) => {
     return campaign.clicks > 100 && campaign.LP_CTR < 10;
 }
 
+const objectById = (data, id) => {
+    return data.find(elem => elem.id === id);
+}
+
 if(options.cmd === 'fetch') {
     binom.getCampaignList()
     .then(result => {
         result = result.map(campaign => processCampaign(campaign));
         console.log(`got ${result.length} campaigns`);
-        store.addDataPoint('campaigns', result);
+        store.addDataPoint(CAMPAIGNS, result);
         cli.ok('fetch complete');
         process.exit(0);
     })
@@ -62,8 +70,8 @@ if(options.cmd === 'fetch') {
         console.error(err.toString());
         process.exit(1);
     });
-} else if(options.cmd === 'analyze') {
-    const { timestamp, set } = store.getLatest('campaigns');
+} else if(options.cmd === 'build_lists') {
+    const { timestamp, set } = store.getLatest(CAMPAIGNS);
     if(!set) { cli.fatal('no fetched data') }
     const date = new Date(+timestamp);
     console.log(`working at ${date.toString()}`);
@@ -74,15 +82,31 @@ if(options.cmd === 'fetch') {
     set.map(campaign => {
         if(needsWhitelisting(campaign)) {
             wl.push(campaign.id);
-            console.log(`needs whitelisting: ${campaign.name}`);
         }
         if(needsBlacklisting(campaign)) {
             bl.push(campaign.id);
-            console.log(`needs blacklisting: ${campaign.name}`);
         }
     })
-    store.addDataPoint('whilelist', wl);
-    store.addDataPoint('blacklist', bl);
+    store.addDataPoint(WHITELIST, wl);
+    store.addDataPoint(BLACKLIST, bl);
+
+    process.exit(0);
+} else if(options.cmd === 'stat') {
+    const { set: campaigns } = store.getLatest(CAMPAIGNS);
+    const { set: wl, timestamp: wlts } = store.getLatest(WHITELIST);
+    const { set: bl, timestamp: blts } = store.getLatest(BLACKLIST);
+
+    if(!campaigns || !wl || !bl) {
+        cli.fatal('no fetched data')
+    }
+
+    console.log(`Whitelisted at ${new Date(+wlts).toString()}:`);
+    wl.map(id => console.log(`  ${objectById(campaigns, id).name}`));
+    console.log(`  ${wl.length} total`);
+
+    console.log(`Blacklisted at ${new Date(+blts).toString()}:`);
+    bl.map(id => console.log(`  ${objectById(campaigns, id).name}`));
+    console.log(`  ${bl.length} total`);
 
     process.exit(0);
 } else {

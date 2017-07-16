@@ -36,7 +36,7 @@ export default class TimedStore {
      */
     addDataPoint(setID, data) {
         const timestamp = Date.now();
-        console.log(`adding "${setID}" data set with timestamp "${timestamp}"`);
+        console.log(`adding "${setID}" data set with timestamp "${timestamp}" (${data.length} records)`);
         this.data[setID] = this.data[setID] || {};
         this.data[setID][timestamp] = data;
         this.save();
@@ -55,8 +55,13 @@ export default class TimedStore {
      *
      */
     getLatest(setID) {
+        if(!this.data[setID]) {
+            return { timestamp: null, set: null }
+        }
         const keys = Object.keys(this.data[setID]).sort();
-        if(keys.length <= 0) return undefined;
+        if(keys.length <= 0) {
+            return { timestamp: null, set: null }
+        }
         const key = keys[keys.length - 1];
         return { timestamp: key, set: this.data[setID][key] };
     }
