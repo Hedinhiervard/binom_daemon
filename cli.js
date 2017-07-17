@@ -2,7 +2,7 @@ import fs from 'fs';
 import cli from 'cli';
 import ListBuilder from 'list-builder';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
+import ConfigLoader from 'config-loader';
 
 dotenv.config();
 
@@ -15,14 +15,9 @@ const options = cli.parse({
     cmd: ['c', '{update_lists|print_lists}', 'string']
 });
 
-console.log(`loading config from ${process.env.CONFIG_FILE_URL}`);
-
-fetch(process.env.CONFIG_FILE_URL, 'utf-8')
-.then(res => res.text())
-.then(content => {
-    console.log(content);
-    console.log('done fetching config');
-    config = JSON.parse(content);
+new ConfigLoader().loadConfig(process.env.CONFIG_FILE_URL)
+.then(result => {
+    config = result
     listBuilder = new ListBuilder(process.env.MONGODB_URI, config.API);
     return listBuilder.init();
 })

@@ -42,7 +42,8 @@ export default class ListBuilder {
      * @return {Promise} pending operation
      */
     init() {
-        return this.store.init();
+        return this.store.init()
+        .then(() => this);
     }
 
     /**

@@ -3,20 +3,33 @@ import ListBuilder from 'list-builder';
 import fs from 'fs';
 import schedule from 'schedule';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
+import ConfigLoader from 'config-loader';
 
 dotenv.config();
 
 let expressApp = express();
-
-const configFileName = '.smrtmnk.com.json';
-
-console.log(`loading config from ${process.env.CONFIG_FILE_URL}`);
-
-let listBuilder;
+let timer;
+let lastConfig;
 
 const port = process.env.PORT || 8080;
-let config;
+
+const buildLists = () => {
+    console.log('building lists');
+    return new ConfigLoader().loadConfig(process.env.CONFIG_FILE_URL)
+    .then(config => {
+        lastConfig = config;
+        return new ListBuilder(process.env.MONGODB_URI, config.API)
+        .init();
+    })
+    .then(listBuilder => listBuilder.buildLists(lastConfig.rules))
+    .then(lists => {
+        if(timer) timer.stop();
+        console.log(`rescheduling update at ${lastConfig.listBuildInterval}`);
+        timer = schedule.every(lastConfig.listBuildInterval).do(() => {
+            buildLists();
+        });
+    });
+}
 
 const promisifySingle = (f, param) => {
     return new Promise((resolve, reject) => {
@@ -30,36 +43,34 @@ const promisifySingle = (f, param) => {
     });
 }
 
-fetch(process.env.CONFIG_FILE_URL, 'utf-8')
-.then(res => res.text())
-.then(content => {
-    config = JSON.parse(content);
-    listBuilder = new ListBuilder(process.env.MONGODB_URI, config.API);
-    return listBuilder.init()
-})
-.then(() => {
-    expressApp.get('/report', (req, res, next) => {
-        listBuilder.getLatest()
-        .then(({timestamp, set: lists}) => {
-            res.send(lists);
-            next();
-        });
+expressApp.get('/report', (req, res, next) => {
+    new ConfigLoader().loadConfig(process.env.CONFIG_FILE_URL)
+    .then(config => {
+        return new ListBuilder(process.env.MONGODB_URI, config.API).init();
+    })
+    .then(listBuilder => listBuilder.getLatest())
+    .then(({timestamp, set: lists}) => {
+        res.send(lists);
+        next();
     });
+});
 
-    expressApp.get('/build', (req, res, next) => {
-        const lists = listBuilder.buildLists(process.env.MONGODB_URI, config.rules)
-        .then(lists => {
-            res.send(lists);
-            next();
-        });
+expressApp.get('/build', (req, res, next) => {
+    buildLists()
+    .then(lists => {
+        res.send(lists);
+        next();
+    })
+    .catch(err => {
+        console.error(err.toString(), err.stack);
     });
+});
 
-    schedule.every(config.listBuildInterval).do(() => {
-        console.log('building');
-        listBuilder.buildLists(config.rules);
-    });
-})
-.then(() => promisifySingle(expressApp.listen.bind(expressApp), port))
+promisifySingle(expressApp.listen.bind(expressApp), port)
 .then(() => {
     console.log(`listening on ${port}`);
+})
+.then(() => buildLists())
+.catch(err => {
+    console.error(err.toString(), err.stack);
 });
