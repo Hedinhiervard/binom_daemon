@@ -31,13 +31,10 @@ const buildLists = () => {
     })
     .catch(err => {
         console.error(err.toString(), err.stack);
-        console.error('error building list, rescheduling update in 1 min');
-        if(timer) {
-            timer.stop();
-        }
-        timer = schedule.every('1 min').do(() => {
-            buildLists();
-        });
+        console.error(`error building list, rescheduling update in 60 sec`);
+        if(timer) timer.stop();
+
+        setTimeout(() => buildLists(), 60000);
     });
 }
 
