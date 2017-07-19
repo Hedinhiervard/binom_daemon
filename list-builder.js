@@ -64,23 +64,24 @@ export default class ListBuilder {
         let listData = { wl: {}, bl: {} }
 
         for(const campaignID in rules) {
-            let promise = this.binom.getPublishersForCampaign(campaignID)
-            .then(publishers => {
+            const rule = rules[campaignID];
+            let promise = this.binom.getEntitiesForCampaign(campaignID, rule.groupings)
+            .then(entities => {
                 listData.wl[campaignID] = [];
                 listData.bl[campaignID] = [];
 
-                const wlEval = this.evaluator.compile(rules[campaignID].publisherWhitelistConditions);
-                const blEval = this.evaluator.compile(rules[campaignID].publisherBlacklistConditions);
+                const wlEval = this.evaluator.compile(rules[campaignID].whitelistConditions);
+                const blEval = this.evaluator.compile(rules[campaignID].blacklistConditions);
 
-                for(let publisher of publishers) {
-                    if(wlEval(publisher)) {
-                        console.log(`${publisher.name} (campaign ${campaignID}) is whitelisted`)
-                        listData.wl[campaignID].push(publisher.name);
+                for(let entity of entities) {
+                    if(wlEval(entity)) {
+                        console.log(`${entity.name} (campaign ${campaignID}) is whitelisted`)
+                        listData.wl[campaignID].push(entity.name);
                     }
 
-                    if(blEval(publisher)) {
-                        console.log(`${publisher.name} (campaign ${campaignID}) is blacklisted`)
-                        listData.bl[campaignID].push(publisher.name);
+                    if(blEval(entity)) {
+                        console.log(`${entity.name} (campaign ${campaignID}) is blacklisted`)
+                        listData.bl[campaignID].push(entity.name);
                     }
                 }
             })
@@ -94,8 +95,6 @@ export default class ListBuilder {
         .then(() => {
             return this.store.addDataPoint(LIST_DATA, listData);
         })
-        .then(() => {
-            return listData
-        });
+        .then(() => listData);
     }
 }

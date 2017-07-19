@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-const publisherFieldsOfInterest = {
+const fieldsOfInterest = {
+    Level: { type: 'number', destination: 'level' },
     Name: { type: 'string', destination: 'name' },
-    'LP CTR': { type: 'number', destination: 'lpctr' },
     Clicks: { type: 'number', destination: 'clicks' },
+    'LP CLICKS': { type: 'number', destination: 'lpclicks' },
+    'LP CTR': { type: 'number', destination: 'lpctr' },
     Leads: { type: 'number', destination: 'leads' },
+    CR: { type: 'number', destination: 'cr' },
+    EPC: { type: 'number', destination: 'epc' },
+    CPC: { type: 'number', destination: 'cpc' },
+    Revenue: { type: 'number', destination: 'revenue' },
+    Spend: { type: 'number', 'destination': 'spend' },
+    Profit: { type: 'number', 'destination': 'profit' },
     ROI: { type: 'number', destination: 'roi' }
 }
 
@@ -12,12 +20,6 @@ const publisherFieldsOfInterest = {
  * Provides access to the Binom web API
  */
 export default class BinomAPIClient {
-    /**
-     * Axios instance to use
-     * @type {axios}
-     */
-    api = null;
-
     /**
      * The default config to append to all requests
      * @type {Object}
@@ -30,17 +32,11 @@ export default class BinomAPIClient {
      */
 
     constructor(config) {
-        this.config = config;
-        let cookieString = '';
-        for(const cookieName in config.cookies) {
-            cookieString += `${cookieName}=${config.cookies[cookieName]}; `;
+        if(!config.baseURL) {
+            throw new Error('no baseURL in config');
         }
-        this.api = axios.create({
-            baseURL: this.config.baseURL,
-            headers: {
-                'cookie': cookieString
-            }
-        });
+
+        this.config = config;
     }
 
     /**
@@ -48,11 +44,25 @@ export default class BinomAPIClient {
      * @param  {Object} params - parameters to use
      * @return {Promise<Object>} - promised object with parsed data
      */
-    makeAPIRequest(params) {
+    makeAPIRequest(params, tempCookies) {
+        const targetCookies = Object.assign(tempCookies, this.config.cookies);
+
+        let cookieString = '';
+        for(const cookieName in targetCookies) {
+            cookieString += `${cookieName}=${targetCookies[cookieName]}; `;
+        }
+
+        const api = axios.create({
+            baseURL: this.config.baseURL,
+            headers: {
+                'cookie': cookieString
+            }
+        });
+
         params.api_key = this.config.api_key;
         params.timezone = this.config.timezone;
-        return this.api.get('/', { params })
-      .then(response => response.data);
+        return api.get('/', { params })
+        .then(response => response.data);
     }
 
     /**
@@ -65,19 +75,44 @@ export default class BinomAPIClient {
     }
 
     /**
-     * Returns detailed publishers list for the given campaign id
-     * @param  {number} campaignID - campaign to request publishers for
-     * @return {Array} - detailed list of publishers
+     * Returns detailed entities list for the given campaign id and groupings
+     * @param  {number} campaignID - campaign to request entities for
+     * @param {Array<number>} groupings - array of grouping ids
+     * @return {Array} - detailed list of entities
      */
-    getPublishersForCampaign(campaignID) {
-        console.log(`getting publishers info for campaign ${campaignID}`);
-        return this.makeAPIRequest({ page: 'Stats', camp_id: campaignID })
-        .then(publishers => publishers.map(publisher => this.processPublisher(publisher)));
+    getEntitiesForCampaign(campaignID, groupings) {
+        let cookies = {};
+        for(const idx in groupings) {
+            cookies[`group${+idx + 1}`] = groupings[idx];
+        }
+        console.log(`getting entities info for campaign ${campaignID}, groupings: ${groupings}`);
+        return this.makeAPIRequest({ page: 'Stats', camp_id: campaignID }, cookies)
+        .then(entities => {
+            /* parse nubmers and rename fields */
+            entities = entities
+            .map(entity => this.processEntity(entity, fieldsOfInterest));
+
+            /* sum up names */
+            let nameQueue = [];
+            for(const idx in entities) {
+                const entity = entities[idx];
+                nameQueue[entity.level - 1] = entity.name;
+                if(entity.level === groupings.length) {
+                    entity.name = nameQueue.join(' :: ');
+                }
+            }
+
+            /* filter out the non-bottom level entities, (i.e. category names) */
+            entities = entities
+            .filter(entity => entity.level === groupings.length)
+
+            return entities;
+        });
     }
 
     /**
      * This function post-process the entity received from API to parse integers, floats
-     * and rename field to the scheme
+     * and rename fields to comply with the scheme
      * @param {Object} entity object to proceess
      * @param {Object} table table of the properties to use
      * @return {Object} processed object
@@ -93,14 +128,4 @@ export default class BinomAPIClient {
         return result;
     }
 
-    /**
-     * This function post-process the PUBLISHER received from API to parse integers, floats
-     * and rename field to the scheme
-     * @param {Object} entity object to proceess
-     * @param {Object} table table of the properties to use
-     * @return {Object} processed object
-     */
-    processPublisher(publisher) {
-        return this.processEntity(publisher, publisherFieldsOfInterest);
-    }
 }

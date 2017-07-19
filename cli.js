@@ -3,6 +3,7 @@ import cli from 'cli';
 import ListBuilder from 'list-builder';
 import dotenv from 'dotenv';
 import ConfigLoader from 'config-loader';
+import BinomAPIClient from 'binom-api-client';
 
 dotenv.config();
 
@@ -18,17 +19,19 @@ const options = cli.parse({
 new ConfigLoader().loadConfig(process.env.CONFIG_FILE_URL)
 .then(result => {
     config = result
-    listBuilder = new ListBuilder(process.env.MONGODB_URI, config.API);
-    return listBuilder.init();
-})
-.then(() => {
-    console.log('list builder inited');
+    console.log('config parsed');
     parseOptions();
+})
+.catch(err => {
+    console.log(err.toString(), err.stack);
+    process.exit(1);
 });
 
 const parseOptions = () => {
     if(options.cmd === 'update_lists') {
-        listBuilder.buildLists(config.rules)
+        listBuilder = new ListBuilder(process.env.MONGODB_URI, config.API);
+        listBuilder.init()
+        .then(() => listBuilder.buildLists(config.rules))
         .then(lists => {
             console.log(lists);
             process.exit(0);
@@ -38,6 +41,9 @@ const parseOptions = () => {
             process.exit(1);
         });
     } else if(options.cmd === 'print_lists') {
+        listBuilder = new ListBuilder(process.env.MONGODB_URI, config.API);
+        listBuilder.init()
+        .then(() => listBuilder.buildLists(config.rules))
         listBuilder.getLatest()
         .then(({set: lists}) => {
             console.log(lists);

@@ -1,0 +1,40 @@
+# Возможные значения массива `groupings`:
+ - paths  
+ - offers  
+ - landers  
+ - rules  
+ - isp  
+ - ip  
+ - ip-range-1.2.3.xxx  
+ - ip-range-1.2.xxx.xxx  
+ - device-type  
+ - device-name  
+ - device-brand  
+ - device-model  
+ - screen-resolution  
+ - connection-speed  
+ - browser-name  
+ - OS  
+ - OS w/version  
+ - country  
+ - language  
+ - aff-network  
+ - referer-domain  
+ - referer-url  
+ - day-of-week  
+ - hour-of-day  
+ - days  
+
+# Возможные значения фильтров для white- и blacklist:
+- name
+- clicks
+- lpclicks
+- lpctr
+- leads
+- cr
+- epc
+- cpc
+- revenue
+- spend
+- profit
+- roi
