@@ -47,8 +47,7 @@ export default class ConfigLoader {
 
     parseGroupings(groupings) {
         if(!Array.isArray(groupings) || groupings.length > 3) {
-            console.log(groupings);
-            throw new Error('grouping must be an array of <= 3 elements');
+            throw new Error('groupings must be an array of <= 3 elements');
         }
         let result = [];
         for(const grouping of groupings) {

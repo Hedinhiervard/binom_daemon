@@ -28,6 +28,16 @@ const buildLists = () => {
         timer = schedule.every(lastConfig.listBuildInterval).do(() => {
             buildLists();
         });
+    })
+    .catch(err => {
+        console.error(err.toString(), err.stack);
+        console.error('error building list, rescheduling update in 1 min');
+        if(timer) {
+            timer.stop();
+        }
+        timer = schedule.every('1 min').do(() => {
+            buildLists();
+        });
     });
 }
 

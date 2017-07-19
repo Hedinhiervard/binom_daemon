@@ -127,5 +127,4 @@ export default class BinomAPIClient {
         }
         return result;
     }
-
 }
