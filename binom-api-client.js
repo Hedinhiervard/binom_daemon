@@ -61,6 +61,7 @@ export default class BinomAPIClient {
 
         params.api_key = this.config.api_key;
         params.timezone = this.config.timezone;
+        params.val_page = 10000;
         return api.get('/', { params })
         .then(response => response.data);
     }
