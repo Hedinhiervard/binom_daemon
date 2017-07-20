@@ -37,6 +37,19 @@ const groupingIDs = {
     't9': 289
 };
 
+const dateIDs = {
+    'today': 1,
+    'yesterday': 2,
+    'last-7-days': 3,
+    'last-14-days': 4,
+    'current-month': 5,
+    'last-month': 6,
+    'current-year': 7,
+    'last-year': 8,
+    'all-time': 9,
+    'current-week': 11
+}
+
 export default class ConfigLoader {
     loadConfig(url) {
         console.log(`loading config from ${url}`);
@@ -49,14 +62,22 @@ export default class ConfigLoader {
         for(let campaignID in content.rules) {
             let rule = content.rules[campaignID];
             rule.groupings = this.parseGroupings(rule.groupings);
+            rule.date = this.parseDate(rule.date);
         }
         return content;
     });
     }
 
+    /**
+     * Parses groupings value from textual to id representation
+     * @param  {Array} groupings array of string values
+     * @example ['t1', 'country', 'language']
+     * @return {Array} array of id values
+     * @example [19, 17, 1]
+     */
     parseGroupings(groupings) {
         if(!Array.isArray(groupings) || groupings.length > 3) {
-            throw new Error('groupings must be an array of <= 3 elements');
+            throw new Error(`groupings must be an array of <= 3 elements, got: ${groupings}`);
         }
         let result = [];
         for(const grouping of groupings) {
@@ -67,5 +88,23 @@ export default class ConfigLoader {
             result.push(idx);
         }
         return result;
+    }
+
+    /**
+     * Parses date value from textual to id representation
+     * @param  {string} date date value as string
+     * @example 'today'
+     * @return {number} date value as id
+     * @example 1
+     */
+    parseDate(date) {
+        if(typeof date !== 'string') {
+            throw new Error(`date must be string, got: ${date}`);
+        }
+        const idx = dateIDs[date];
+        if(idx === undefined) {
+            throw new Error(`unknown date ${date}`);
+        }
+        return idx;
     }
 }

@@ -65,7 +65,7 @@ export default class ListBuilder {
 
         for(const campaignID in rules) {
             const rule = rules[campaignID];
-            let promise = this.binom.getEntitiesForCampaign(campaignID, rule.groupings)
+            let promise = this.binom.getEntitiesForCampaign(campaignID, rule.groupings, rule.date)
             .then(entities => {
                 listData.wl[campaignID] = [];
                 listData.bl[campaignID] = [];

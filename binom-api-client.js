@@ -4,7 +4,7 @@ const fieldsOfInterest = {
     Level: { type: 'number', destination: 'level' },
     Name: { type: 'string', destination: 'name' },
     Clicks: { type: 'number', destination: 'clicks' },
-    'LP CLICKS': { type: 'number', destination: 'lpclicks' },
+    'LP Clicks': { type: 'number', destination: 'lpclicks' },
     'LP CTR': { type: 'number', destination: 'lpctr' },
     Leads: { type: 'number', destination: 'leads' },
     CR: { type: 'number', destination: 'cr' },
@@ -44,7 +44,7 @@ export default class BinomAPIClient {
      * @param  {Object} params - parameters to use
      * @return {Promise<Object>} - promised object with parsed data
      */
-    makeAPIRequest(params, tempCookies) {
+    makeAPIRequest(params, tempCookies = {}) {
         const targetCookies = Object.assign(tempCookies, this.config.cookies);
 
         let cookieString = '';
@@ -80,13 +80,21 @@ export default class BinomAPIClient {
      * @param {Array<number>} groupings - array of grouping ids
      * @return {Array} - detailed list of entities
      */
-    getEntitiesForCampaign(campaignID, groupings) {
+    getEntitiesForCampaign(campaignID, groupings, date) {
+        let params = {
+            page: 'Stats',
+            camp_id: campaignID,
+            date
+        };
         let cookies = {};
+
         for(const idx in groupings) {
+            params[`group${+idx + 1}`] = groupings[idx];
             cookies[`group${+idx + 1}`] = groupings[idx];
         }
-        console.log(`getting entities info for campaign ${campaignID}, groupings: ${groupings}`);
-        return this.makeAPIRequest({ page: 'Stats', camp_id: campaignID }, cookies)
+
+        console.log(`getting entities info for campaign ${campaignID}, groupings: ${groupings}, date: ${date}`);
+        return this.makeAPIRequest(params, cookies)
         .then(entities => {
             /* parse nubmers and rename fields */
             entities = entities
@@ -120,6 +128,9 @@ export default class BinomAPIClient {
     processEntity(entity, table) {
         let result = {};
         for(const field in table) {
+            if(!entity[field]) {
+                throw new Error(`entity misses field ${field}: ${JSON.stringify(entity, null, 4)}`);
+            }
             result[table[field].destination] = entity[field];
             if(table[field].type === 'number') {
                 result[table[field].destination] = parseFloat(result[table[field].destination]);

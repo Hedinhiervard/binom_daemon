@@ -39,3 +39,15 @@
 - spend
 - profit
 - roi
+
+# Возможные значения `date`:
+ - today
+ - yesterday
+ - last-7-days
+ - last-14-days
+ - current-month
+ - last-month
+ - current-year
+ - last-year
+ - all-time
+ - current-week
