@@ -88,9 +88,16 @@ export default class BinomAPIClient {
         };
         let cookies = {};
 
+        let topIdx = 1;
         for(const idx in groupings) {
             params[`group${+idx + 1}`] = groupings[idx];
-            cookies[`group${+idx + 1}`] = groupings[idx];
+            topIdx = Math.max(topIdx, +idx + 1);
+        }
+
+        /* the unused groupXXX fields are set to 1 */
+        topIdx++;
+        for(; topIdx <= 3; topIdx++) {
+            params[`group${topIdx}`] = 1;
         }
 
         console.log(`getting entities info for campaign ${campaignID}, groupings: ${groupings}, date: ${date}`);
