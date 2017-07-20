@@ -24,6 +24,7 @@
  - day-of-week  
  - hour-of-day  
  - days  
+ - t1 - t9
 
 # Возможные значения фильтров для white- и blacklist:
 - name

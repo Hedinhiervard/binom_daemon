@@ -25,7 +25,16 @@ const groupingIDs = {
     'referer-url': 24,
     'day-of-week': 25,
     'hour-of-day': 26,
-    'days': 27
+    'days': 31,
+    't1': 27,
+    't2': 282,
+    't3': 283,
+    't4': 284,
+    't5': 285,
+    't6': 286,
+    't7': 287,
+    't8': 288,
+    't9': 289
 };
 
 export default class ConfigLoader {
